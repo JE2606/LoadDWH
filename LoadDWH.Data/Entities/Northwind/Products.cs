@@ -1,7 +1,10 @@
-﻿namespace LoadDWH.Data.Entities.Northwind
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LoadDWH.Data.Entities.Northwind
 {
     public class Products
     {
+        [Key]
         public int ProductID { get; set; }
         public string ProductName { get; set; }
         public int? SupplierID { get; set; }

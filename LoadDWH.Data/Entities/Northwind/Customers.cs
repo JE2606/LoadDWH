@@ -1,8 +1,11 @@
-﻿namespace LoadDWH.Data.Entities.Northwind
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LoadDWH.Data.Entities.Northwind
 {
 
     public class Customers
     {
+        [Key]
         public string CustomerID { get; set; }
         public string CompanyName { get; set; }
         public string ContactName { get; set; }

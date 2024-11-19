@@ -3,6 +3,7 @@ using LoadDWH.Data.Context;
 using LoadDWH.Data.Entities.DwNorthwind;
 using LoadDWH.Data.Interfaces;
 using LoadDWH.Data.Result;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoadDWH.Data.Services
 {
@@ -17,13 +18,39 @@ namespace LoadDWH.Data.Services
             _salesContext = salesContext;
         }
 
-        public async Task<OperationResult> LoadDimCustomers()
+        private async Task ClearDimTablesAsync()
+        {
+            // Usamos transacciones para asegurar que todas las eliminaciones sean atómicas
+            using (var transaction = await _salesContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    _salesContext.DimCustomers.RemoveRange(_salesContext.DimCustomers);
+                    _salesContext.DimEmployees.RemoveRange(_salesContext.DimEmployees);
+                    _salesContext.DimProducts.RemoveRange(_salesContext.DimProducts);
+                    _salesContext.DimShippers.RemoveRange(_salesContext.DimShippers);
+
+                    
+                    await _salesContext.SaveChangesAsync();
+
+                    
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw new Exception($"Error al limpiar las tablas Dim: {ex.Message}");
+                }
+            }
+        }
+
+        private async Task<OperationResult> LoadDimCustomers()
         {
             OperationResult result = new OperationResult();
 
             try
             {
-                var customer = _norwindContext.Customers.Select(cos => new DimCustomers() 
+                var customer = _norwindContext.Customers.AsNoTracking().Select(cos => new DimCustomers() 
                 { 
                     CustomerId = cos.CustomerID,
                     CustomerName = cos.ContactName,
@@ -43,13 +70,13 @@ namespace LoadDWH.Data.Services
             return result;
         }
 
-        public async Task<OperationResult> LoadDimEmployees()
+        private async Task<OperationResult> LoadDimEmployees()
         {
             OperationResult result = new OperationResult() ;
 
             try
             {
-                var employees = _norwindContext.Employees.Select(emp => new DimEmployees()
+                var employees = _norwindContext.Employees.AsNoTracking().Select(emp => new DimEmployees()
                 {
                     EmployeeId = emp.EmployeeID,
                     EmployeeName = string.Concat(emp.FirstName, " ", emp.LastName),
@@ -67,7 +94,7 @@ namespace LoadDWH.Data.Services
             
         }
 
-        public async Task<OperationResult> LoadDimProducts()
+        private async Task<OperationResult> LoadDimProducts()
         {
 
             OperationResult result = new OperationResult() ;
@@ -76,14 +103,13 @@ namespace LoadDWH.Data.Services
             {
                 var productCategories = (from product in _norwindContext.Products
                                          join category in _norwindContext.Categories on product.CategoryID equals category.CategoryID
-                                         where product.CategoryID < 0
                                          select new DimProducts()
                                          {
                                              CategoryID = category.CategoryID,
                                              ProductName = product.ProductName,
                                              CategoryName = category.CategoryName,
                                              ProductID = product.ProductID,
-                                         }).ToList();
+                                         }).AsNoTracking().ToList();
                 await _salesContext.DimProducts.AddRangeAsync(productCategories);
                 await _salesContext.SaveChangesAsync();
             }
@@ -97,13 +123,13 @@ namespace LoadDWH.Data.Services
 
         }
 
-        public async Task<OperationResult> LoadDimShippers()
+        private async Task<OperationResult> LoadDimShippers()
         {
             OperationResult result = new OperationResult();
 
             try
             {
-                var shippers = _norwindContext.Shippers.Select(ship => new DimShippers()
+                var shippers = _norwindContext.Shippers.AsNoTracking().Select(ship => new DimShippers()
                 {
                     ShipperID = ship.ShipperID,
                     CompanyName = ship.CompanyName
@@ -118,6 +144,30 @@ namespace LoadDWH.Data.Services
                 result.Success = false;
                 result.Message = $"Error cargando la dimension de Shippers. {ex.Message}";
             }
+
+            return result;
+        }
+
+        public async Task<OperationResult> LoadDWH()
+        {
+            OperationResult result = new OperationResult();
+
+            try
+            {
+                await ClearDimTablesAsync();
+
+                await LoadDimEmployees();
+                await LoadDimCustomers();
+                await LoadDimProducts();
+                await LoadDimShippers();
+
+            }
+            catch(Exception ex)
+            {
+                result.Success = false;
+                result.Message = $"Error cargando el DWH Sales {ex.Message}";
+            }
+
 
             return result;
         }

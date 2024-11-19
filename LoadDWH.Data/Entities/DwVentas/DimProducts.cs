@@ -1,4 +1,5 @@
 ﻿
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace LoadDWH.Data.Entities.DwNorthwind
@@ -8,6 +9,7 @@ namespace LoadDWH.Data.Entities.DwNorthwind
 
     public class DimProducts
     {
+        [Key]
         public int ProductKey { get; set; } 
         public int ProductID { get; set; }  
         public string ProductName { get; set; } 
