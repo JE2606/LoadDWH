@@ -13,7 +13,7 @@ namespace LoadDWH.Data.Context
         public DbSet<DimCustomers> DimCustomers { get; set; }
         public DbSet<DimEmployees> DimEmployees { get; set; }
         public DbSet<DimProducts> DimProducts { get; set; }
-        public DbSet<DimShippers> DimShippers { get; set; }
+        public DbSet<DimShippers> DimShippers { get; set; } //Creacion
         #endregion
 
     }
