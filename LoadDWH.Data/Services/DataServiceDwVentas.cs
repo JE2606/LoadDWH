@@ -12,7 +12,7 @@ namespace LoadDWH.Data.Services
         private readonly NorwindContext _norwindContext;
         private readonly SalesContext _salesContext;
 
-        public DataServiceDwVentas(NorwindContext norwindContext, SalesContext salesContext) 
+        public DataServiceDwVentas(NorwindContext norwindContext, SalesContext salesContext)
         {
             _norwindContext = norwindContext;
             _salesContext = salesContext;
@@ -20,7 +20,7 @@ namespace LoadDWH.Data.Services
 
         private async Task ClearDimTablesAsync()
         {
-            // Usamos transacciones para asegurar que todas las eliminaciones sean atómicas
+
             using (var transaction = await _salesContext.Database.BeginTransactionAsync())
             {
                 try
@@ -30,10 +30,10 @@ namespace LoadDWH.Data.Services
                     _salesContext.DimProducts.RemoveRange(_salesContext.DimProducts);
                     _salesContext.DimShippers.RemoveRange(_salesContext.DimShippers);
 
-                    
+
                     await _salesContext.SaveChangesAsync();
 
-                    
+
                     await transaction.CommitAsync();
                 }
                 catch (Exception ex)
@@ -50,15 +50,15 @@ namespace LoadDWH.Data.Services
 
             try
             {
-                var customer = _norwindContext.Customers.AsNoTracking().Select(cos => new DimCustomers() 
-                { 
+                var customer = _norwindContext.Customers.AsNoTracking().Select(cos => new DimCustomers()
+                {
                     CustomerId = cos.CustomerID,
                     CustomerName = cos.ContactName,
 
                 }).ToList();
 
-               await _salesContext.DimCustomers.AddRangeAsync(customer);
-               await _salesContext.SaveChangesAsync();
+                await _salesContext.DimCustomers.AddRangeAsync(customer);
+                await _salesContext.SaveChangesAsync();
 
             }
             catch (Exception ex)
@@ -72,7 +72,7 @@ namespace LoadDWH.Data.Services
 
         private async Task<OperationResult> LoadDimEmployees()
         {
-            OperationResult result = new OperationResult() ;
+            OperationResult result = new OperationResult();
 
             try
             {
@@ -85,19 +85,19 @@ namespace LoadDWH.Data.Services
                 await _salesContext.DimEmployees.AddRangeAsync(employees);
                 await _salesContext.SaveChangesAsync();
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 result.Success = false;
                 result.Message = $"Error cargando la dimension de Employees. {ex.Message}";
             }
             return result;
-            
+
         }
 
         private async Task<OperationResult> LoadDimProducts()
         {
 
-            OperationResult result = new OperationResult() ;
+            OperationResult result = new OperationResult();
 
             try
             {
@@ -113,13 +113,14 @@ namespace LoadDWH.Data.Services
                 await _salesContext.DimProducts.AddRangeAsync(productCategories);
                 await _salesContext.SaveChangesAsync();
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 result.Success = false;
                 result.Message = $"Error cargando la dimension de Productos con las Categorias. {ex.Message}";
             }
 
             return result;
-            
+
 
         }
 
@@ -154,21 +155,56 @@ namespace LoadDWH.Data.Services
 
             try
             {
-                await ClearDimTablesAsync();
+                //await ClearDimTablesAsync();
 
-                await LoadDimEmployees();
-                await LoadDimCustomers();
-                await LoadDimProducts();
-                await LoadDimShippers();
+                //await LoadDimEmployees();
+                //await LoadDimCustomers();
+                //await LoadDimProducts();
+                //await LoadDimShippers();
+
+                await LoadFactVentas();
+                await LoadFactServedCustomers();
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 result.Success = false;
                 result.Message = $"Error cargando el DWH Sales {ex.Message}";
             }
 
 
+            return result;
+        }
+
+        private async Task<OperationResult> LoadFactVentas()
+        {
+            OperationResult result = new OperationResult();
+            try
+            {
+                var ventas = await _norwindContext.Vwventa.AsNoTracking().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = $"Error cargando el DWH Ventas {ex.Message}";
+
+            }
+            return result;
+        }
+
+        private async Task<OperationResult> LoadFactServedCustomers()
+        {
+            OperationResult result = new OperationResult();
+            try
+            {
+                var servedCustomers = await _norwindContext.VwservedCustomer.AsNoTracking().ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = $"Error cargando el DWH Clientes Atendidos {ex.Message}";
+
+            }
             return result;
         }
     }

@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35506.116 d17.12
+VisualStudioVersion = 17.12.35506.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadDWH.Data", "LoadDWH.Data\LoadDWH.Data.csproj", "{D14BDC79-43E3-4175-BDE9-714B1714ADEA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadDWH.Worker", "LoadDWH.Worker\LoadDWH.Worker.csproj", "{A4067341-35B8-4A4E-9DAB-6E75044F0162}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadDWH.Models", "LoadDWH.Models\LoadDWH.Models.csproj", "{F1A44E00-8469-4F4F-A9D2-D72E62BC5277}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{A4067341-35B8-4A4E-9DAB-6E75044F0162}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A4067341-35B8-4A4E-9DAB-6E75044F0162}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4067341-35B8-4A4E-9DAB-6E75044F0162}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1A44E00-8469-4F4F-A9D2-D72E62BC5277}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1A44E00-8469-4F4F-A9D2-D72E62BC5277}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1A44E00-8469-4F4F-A9D2-D72E62BC5277}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1A44E00-8469-4F4F-A9D2-D72E62BC5277}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
