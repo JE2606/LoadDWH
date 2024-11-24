@@ -1,6 +1,7 @@
 ﻿
 using LoadDWH.Data.Context;
 using LoadDWH.Data.Entities.DwNorthwind;
+using LoadDWH.Data.Entities.DwVentas;
 using LoadDWH.Data.Interfaces;
 using LoadDWH.Data.Result;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,8 @@ namespace LoadDWH.Data.Services
                     _salesContext.DimEmployees.RemoveRange(_salesContext.DimEmployees);
                     _salesContext.DimProducts.RemoveRange(_salesContext.DimProducts);
                     _salesContext.DimShippers.RemoveRange(_salesContext.DimShippers);
+                    _salesContext.FactServedCustomer.RemoveRange(_salesContext.FactServedCustomer);
+                    _salesContext.FactVentas.RemoveRange(_salesContext.FactVentas);
 
 
                     await _salesContext.SaveChangesAsync();
@@ -155,12 +158,12 @@ namespace LoadDWH.Data.Services
 
             try
             {
-                //await ClearDimTablesAsync();
+                await ClearDimTablesAsync();
 
-                //await LoadDimEmployees();
-                //await LoadDimCustomers();
-                //await LoadDimProducts();
-                //await LoadDimShippers();
+                await LoadDimEmployees();
+                await LoadDimCustomers();
+                await LoadDimProducts();
+                await LoadDimShippers();
 
                 await LoadFactVentas();
                 await LoadFactServedCustomers();
@@ -181,13 +184,88 @@ namespace LoadDWH.Data.Services
             OperationResult result = new OperationResult();
             try
             {
-                var ventas = await _norwindContext.Vwventa.AsNoTracking().ToListAsync();
+                                 var ventas = await _norwindContext.Vwventa.AsNoTracking().ToListAsync();
+
+                                 var ventasId = await _salesContext.FactVentas.Select(cd => cd.VentaId).ToArrayAsync();
+                if (ventasId.Any())
+                {
+                    await _salesContext.FactVentas
+                        .Where(cd => ventasId.Contains(cd.VentaId))
+                        .AsNoTracking()
+                        .ExecuteDeleteAsync();
+                }
+
+                                 var customers = await _salesContext.DimCustomers.ToListAsync();
+                var employees = await _salesContext.DimEmployees.ToListAsync();
+                var shippers = await _salesContext.DimShippers.ToListAsync();
+                var products = await _salesContext.DimProducts.ToListAsync();
+
+                                 List<FactVentas> factVentasList = new List<FactVentas>();
+
+                                 foreach (var venta in ventas)
+                {
+                    var customer = customers.SingleOrDefault(cust => cust.CustomerId == venta.CustomerKey);
+                    var employee = employees.SingleOrDefault(emp => emp.EmployeeId == venta.EmployeeID);
+                    var shipper = shippers.SingleOrDefault(ship => ship.ShipperID == venta.ShipperID);
+                    var product = products.SingleOrDefault(pro => pro.ProductID == venta.ProductID);
+
+                                         if (product == null)
+                    {
+                        Console.WriteLine($"Producto no encontrado para ProductID: {venta.ProductID}. Venta omitida.");
+                        continue;
+                    }
+                    if (customer == null)
+                    {
+                        Console.WriteLine($"Cliente no encontrado para CustomerKey: {venta.CustomerKey}. Venta omitida.");
+                        continue;
+                    }
+                    if (employee == null)
+                    {
+                        Console.WriteLine($"Empleado no encontrado para EmployeeID: {venta.EmployeeID}. Venta omitida.");
+                        continue;
+                    }
+                    if (shipper == null)
+                    {
+                        Console.WriteLine($"Transportista no encontrado para ShipperID: {venta.ShipperID}. Venta omitida.");
+                        continue;
+                    }
+
+                   
+                    FactVentas factVentas = new FactVentas()
+                    {
+                        TotalVentas = venta.TotalVentas,
+                        Country = venta.Country,
+                        CustomerKey = customer.CustomerKey,
+                        EmployeeName = employee.EmployeeName,
+                        DataKey = venta.DateKey,
+                        ProductID = product.ProductID,
+                        ProductName = product.ProductName,
+                        ShipName = shipper.CompanyName,
+                        Month = venta.Month
+                    };
+
+                    factVentasList.Add(factVentas);
+                }
+
+                
+                if (factVentasList.Any())
+                {
+                    await _salesContext.FactVentas.AddRangeAsync(factVentasList);
+                    await _salesContext.SaveChangesAsync();
+                }
+
+                result.Success = true;
+                result.Message = "Datos cargados correctamente en FactVentas.";
+            }
+            catch (DbUpdateException dbEx)
+            {
+                result.Success = false;
+                result.Message = $"Error al actualizar la base de datos: {dbEx.Message}";
             }
             catch (Exception ex)
             {
                 result.Success = false;
-                result.Message = $"Error cargando el DWH Ventas {ex.Message}";
-
+                result.Message = $"Error cargando el DWH Ventas: {ex.Message}";
             }
             return result;
         }
@@ -197,15 +275,50 @@ namespace LoadDWH.Data.Services
             OperationResult result = new OperationResult();
             try
             {
+               
                 var servedCustomers = await _norwindContext.VwservedCustomer.AsNoTracking().ToListAsync();
+
+                
+                var employees = await _salesContext.DimEmployees.ToListAsync();
+
+                
+                List<FactServedCustomer> factServedCustomers = new List<FactServedCustomer>();
+
+                foreach (var served in servedCustomers)
+                {
+                   
+                    var employee = employees.SingleOrDefault(emp => emp.EmployeeKey == served.EmployeeKey);
+
+                    if (employee != null)
+                    {
+                       
+                        FactServedCustomer factServed = new FactServedCustomer()
+                        {
+                            
+                            EmployeeName = served.EmployeeName, 
+                            TotalCustomersServed = served.TotalCustomersServed,
+                            DataKey = served.DataKey
+                        };
+
+                        
+                        factServedCustomers.Add(factServed);
+                    }
+                }
+
+                
+                if (factServedCustomers.Any())
+                {
+                    await _salesContext.FactServedCustomer.AddRangeAsync(factServedCustomers);
+                    await _salesContext.SaveChangesAsync();
+                }
             }
             catch (Exception ex)
             {
                 result.Success = false;
-                result.Message = $"Error cargando el DWH Clientes Atendidos {ex.Message}";
-
+                result.Message = $"Error cargando el DWH Clientes Atendidos: {ex.Message}";
             }
             return result;
         }
+
     }
 }

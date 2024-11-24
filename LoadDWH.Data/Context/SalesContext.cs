@@ -1,5 +1,6 @@
 ﻿
 using LoadDWH.Data.Entities.DwNorthwind;
+using LoadDWH.Data.Entities.DwVentas;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoadDWH.Data.Context
@@ -14,6 +15,8 @@ namespace LoadDWH.Data.Context
         public DbSet<DimEmployees> DimEmployees { get; set; }
         public DbSet<DimProducts> DimProducts { get; set; }
         public DbSet<DimShippers> DimShippers { get; set; }
+        public DbSet<FactVentas> FactVentas { get; set; }
+        public DbSet<FactServedCustomer> FactServedCustomer { get; set; }
         #endregion
 
     }

@@ -2,10 +2,9 @@
 {
     public class VwservedCustomer
     {
-        public int EmployeeId { get; set; }
-
+        public int EmployeeKey { get; set; }   
         public string? EmployeeName { get; set; }
 
-        public int? TotalCustomersServed { get; set; }
-    }
+        public int? TotalCustomersServed { get; set; }   
+        public int? DataKey { get; set; }       }
 }

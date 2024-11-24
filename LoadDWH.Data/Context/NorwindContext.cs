@@ -16,7 +16,7 @@ namespace LoadDWH.Data.Context
         public DbSet<Employees> Employees { get; set; }
         public DbSet<Products> Products { get; set; }
         public DbSet<Shippers> Shippers { get; set; }
-        public DbSet<Vwventa> Vwventa { get; set; }
+        public DbSet<VwVenta> Vwventa { get; set; }
         public DbSet<VwservedCustomer> VwservedCustomer { get; set; }
         #endregion
 
@@ -28,31 +28,63 @@ namespace LoadDWH.Data.Context
                     .HasNoKey()
                     .ToView("VWServedCustomers");
 
-                entity.Property(e => e.EmployeeId).HasColumnName("EmployeeID");
+                                 entity.Property(e => e.EmployeeKey) 
+                    .HasColumnName("EmployeeKey");
+
                 entity.Property(e => e.EmployeeName)
-                    .IsRequired()
+                    .IsRequired()  
                     .HasMaxLength(31);
+
+                entity.Property(e => e.TotalCustomersServed)
+                    .HasColumnName("TotalCustomersServed");
+
+                entity.Property(e => e.DataKey)
+                    .HasColumnName("DataKey"); 
             });
 
-            modelBuilder.Entity<Vwventa>(entity =>
+
+            modelBuilder.Entity<VwVenta>(entity =>
             {
                 entity
                     .HasNoKey()
                     .ToView("VWVentas");
 
-                entity.Property(e => e.CompanyName)
-                    .IsRequired()
-                    .HasMaxLength(40);
-                entity.Property(e => e.CustomerKey)
+                                 entity.Property(e => e.CustomerKey)
                     .IsRequired()
                     .HasMaxLength(5)
                     .IsFixedLength();
+                entity.Property(e => e.CustomerName)
+                    .IsRequired()
+                    .HasMaxLength(40);
+
+                                 entity.Property(e => e.EmployeeID)
+                    .IsRequired();
                 entity.Property(e => e.EmployeeName)
                     .IsRequired()
                     .HasMaxLength(31);
-                entity.Property(e => e.OrderDate).HasColumnType("datetime");
-                entity.Property(e => e.ShipName).HasMaxLength(40);
-                entity.Property(e => e.Total).HasColumnType("money");
+
+                                 entity.Property(e => e.ShipperID)
+                    .IsRequired();
+                entity.Property(e => e.ShipperName)
+                    .IsRequired()
+                    .HasMaxLength(40);
+
+                                 entity.Property(e => e.Country)
+                    .IsRequired()
+                    .HasMaxLength(15);
+
+                                 entity.Property(e => e.ProductID)
+                    .IsRequired();
+                entity.Property(e => e.ProductName)
+                    .IsRequired()
+                    .HasMaxLength(40);
+
+                                 entity.Property(e => e.DateKey).IsRequired();
+                entity.Property(e => e.Year).IsRequired();
+                entity.Property(e => e.Month).IsRequired();
+
+                                 entity.Property(e => e.TotalVentas).HasColumnType("money");
+                entity.Property(e => e.Cantidad).HasColumnType("int");
             });
 
             base.OnModelCreating(modelBuilder);

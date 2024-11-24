@@ -11,7 +11,7 @@ namespace LoadDWH.Data.Entities.DwNorthwind
     {
         [Key]
         public int CustomerKey { get; set; } 
-        public string CustomerId { get; set; }
-        public string CustomerName { get; set; }
+        public string? CustomerId { get; set; }
+        public string? CustomerName { get; set; }
     }
 }
